@@ -1,7 +1,6 @@
-const pool = require("../database/index");
-const multer = require('multer');
+// videoController.js
 
-const upload = multer({ dest: 'uploads/' }); // Speicherort für hochgeladene Dateien
+const pool = require("../database/index");
 
 const videoController = {
     getAllVideos: async (req, res) => {
@@ -35,31 +34,23 @@ const videoController = {
 
     createVideo: async (req, res) => {
         try {
-            const { title, src, thumbnail, description, comments } = req.body;
+            const { comments } = req.body;
 
-            // Umwandlung der Kommentare in einen JSON-String
-            const commentsJSON = JSON.stringify(comments);
+            // Erstellen des neuen Videos in der Datenbank
+            const result = await pool.query("INSERT INTO videos (comments, likes, dislikes) VALUES (?, 0, 0)", [JSON.stringify(comments)]);
+            const newVideoId = result.insertId;
 
-            const sql = `
-                INSERT INTO videos (title, src, thumbnail, description, comments, likes, dislikes) 
-                VALUES (?, ?, ?, ?, ?, 0, 0)
-            `;
-
-            const values = [title, src, thumbnail, description, commentsJSON];
-
-            await pool.query(sql, values);
-
-            res.status(201).json({ message: "Video erfolgreich hochgeladen und erstellt." });
+            res.status(201).json({ message: "Video erfolgreich erstellt." });
         } catch (error) {
             console.error(error);
-            res.status(500).json({ error: "Fehler beim Hochladen und Erstellen des Videos." });
+            res.status(500).json({ error: "Fehler beim Erstellen des Videos." });
         }
     },
 
     updateVideo: async (req, res) => {
         try {
             const { id } = req.params;
-            const { title, src, thumbnail, description, comments } = req.body;
+            const { comments, likes, dislikes } = req.body;
 
             // Umwandlung der Kommentare in einen JSON-String
             const commentsJSON = JSON.stringify(comments);
@@ -67,16 +58,14 @@ const videoController = {
             const sql = `
                 UPDATE videos 
                 SET 
-                    title = ?, 
-                    src = ?, 
-                    thumbnail = ?, 
-                    description = ?, 
-                    comments = ? 
+                    comments = ?, 
+                    likes = ?, 
+                    dislikes = ? 
                 WHERE 
                     id = ?
             `;
 
-            const values = [title, src, thumbnail, description, commentsJSON, id];
+            const values = [commentsJSON, likes, dislikes, id];
 
             await pool.query(sql, values);
 
@@ -105,21 +94,6 @@ const videoController = {
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Fehler beim Löschen des Videos." });
-        }
-    },
-
-    uploadVideo: async (req, res) => {
-        try {
-            const file = req.file;
-            if (!file) {
-                return res.status(400).json({ error: "Keine Datei hochgeladen." });
-            }
-            // Speichern Sie den Dateipfad in der Datenbank oder einem anderen Speicherort
-            const filePath = file.path;
-            res.status(201).json({ message: "Datei erfolgreich hochgeladen.", filePath: filePath });
-        } catch (error) {
-            console.error(error);
-            res.status(500).json({ error: "Fehler beim Hochladen der Datei." });
         }
     }
 };
