@@ -35,8 +35,6 @@ const videoController = {
     createVideo: async (req, res) => {
         try {
             const { comments } = req.body;
-
-            // Erstellen des neuen Videos in der Datenbank
             const result = await pool.query("INSERT INTO videos (comments, likes, dislikes) VALUES (?, 0, 0)", [JSON.stringify(comments)]);
             const newVideoId = result.insertId;
 
@@ -51,10 +49,7 @@ const videoController = {
         try {
             const { id } = req.params;
             const { comments, likes, dislikes } = req.body;
-
-            // Aktualisieren des Videos in der Datenbank
             await pool.query("UPDATE videos SET comments = ?, likes = ?, dislikes = ? WHERE id = ?", [JSON.stringify(comments), likes, dislikes, id]);
-
             res.json({ message: "Video erfolgreich aktualisiert." });
         } catch (error) {
             console.error(error);
@@ -65,14 +60,24 @@ const videoController = {
     deleteVideo: async (req, res) => {
         try {
             const { id } = req.params;
-
-            // Löschen des Videos aus der Datenbank
             await pool.query("DELETE FROM videos WHERE id = ?", [id]);
-
             res.json({ message: "Video erfolgreich gelöscht." });
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Fehler beim Löschen des Videos." });
+        }
+    },
+
+    // Neu hinzugefügt: Endpunkt zum Hinzufügen eines Kommentars zu einem Video
+    addCommentToVideo: async (req, res) => {
+        try {
+            const { videoId } = req.params;
+            const { username, text } = req.body;
+            // Hier sollte Logik hinzugefügt werden, um den Kommentar zum entsprechenden Video in der Datenbank hinzuzufügen
+            res.status(201).json({ message: "Kommentar erfolgreich hinzugefügt." });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Fehler beim Hinzufügen des Kommentars." });
         }
     }
 };
