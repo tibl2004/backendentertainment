@@ -52,26 +52,10 @@ const videoController = {
             const { id } = req.params;
             const { comments, likes, dislikes } = req.body;
 
-            // Umwandlung der Kommentare in einen JSON-String
-            const commentsJSON = JSON.stringify(comments);
+            // Aktualisieren des Videos in der Datenbank
+            await pool.query("UPDATE videos SET comments = ?, likes = ?, dislikes = ? WHERE id = ?", [JSON.stringify(comments), likes, dislikes, id]);
 
-            const sql = `
-                UPDATE videos 
-                SET 
-                    comments = ?, 
-                    likes = ?, 
-                    dislikes = ? 
-                WHERE 
-                    id = ?
-            `;
-
-            const values = [commentsJSON, likes, dislikes, id];
-
-            await pool.query(sql, values);
-
-            res.json({
-                message: "Video erfolgreich aktualisiert."
-            });
+            res.json({ message: "Video erfolgreich aktualisiert." });
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Fehler beim Aktualisieren des Videos." });
@@ -81,16 +65,11 @@ const videoController = {
     deleteVideo: async (req, res) => {
         try {
             const { id } = req.params;
-            const [result] = await pool.query("DELETE FROM videos WHERE id = ?", [id]);
-            if (result.affectedRows > 0) {
-                res.json({
-                    message: "Video erfolgreich gelöscht."
-                });
-            } else {
-                res.status(404).json({
-                    error: "Video nicht gefunden."
-                });
-            }
+
+            // Löschen des Videos aus der Datenbank
+            await pool.query("DELETE FROM videos WHERE id = ?", [id]);
+
+            res.json({ message: "Video erfolgreich gelöscht." });
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Fehler beim Löschen des Videos." });
