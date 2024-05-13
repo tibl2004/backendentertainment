@@ -68,16 +68,37 @@ const videoController = {
         }
     },
 
-    // Neu hinzugefügt: Endpunkt zum Hinzufügen eines Kommentars zu einem Video
     addCommentToVideo: async (req, res) => {
         try {
             const { videoId } = req.params;
             const { username, text } = req.body;
-            // Hier sollte Logik hinzugefügt werden, um den Kommentar zum entsprechenden Video in der Datenbank hinzuzufügen
+            await pool.query("UPDATE videos SET comments = JSON_ARRAY_APPEND(comments, '$', ?) WHERE id = ?", [JSON.stringify({ username, text }), videoId]);
             res.status(201).json({ message: "Kommentar erfolgreich hinzugefügt." });
         } catch (error) {
             console.error(error);
             res.status(500).json({ error: "Fehler beim Hinzufügen des Kommentars." });
+        }
+    },
+
+    likeVideo: async (req, res) => {
+        try {
+            const { videoId } = req.params;
+            await pool.query("UPDATE videos SET likes = likes + 1 WHERE id = ?", [videoId]);
+            res.status(200).json({ message: "Video erfolgreich geliked." });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Fehler beim Liken des Videos." });
+        }
+    },
+
+    dislikeVideo: async (req, res) => {
+        try {
+            const { videoId } = req.params;
+            await pool.query("UPDATE videos SET dislikes = dislikes + 1 WHERE id = ?", [videoId]);
+            res.status(200).json({ message: "Video erfolgreich dislikt." });
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ error: "Fehler beim Disliken des Videos." });
         }
     }
 };
