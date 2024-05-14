@@ -1,5 +1,3 @@
-// videoController.js
-
 const pool = require("../database/index");
 
 const videoController = {
@@ -34,8 +32,7 @@ const videoController = {
 
     createVideo: async (req, res) => {
         try {
-            const { comments } = req.body;
-            const result = await pool.query("INSERT INTO videos (comments, likes, dislikes) VALUES (?, 0, 0)", [JSON.stringify(comments)]);
+            const result = await pool.query("INSERT INTO videos (likes, dislikes) VALUES (0, 0)");
             const newVideoId = result.insertId;
 
             res.status(201).json({ message: "Video erfolgreich erstellt." });
@@ -49,7 +46,7 @@ const videoController = {
         try {
             const { id } = req.params;
             const { comments, likes, dislikes } = req.body;
-            await pool.query("UPDATE videos SET comments = ?, likes = ?, dislikes = ? WHERE id = ?", [JSON.stringify(comments), likes, dislikes, id]);
+            await pool.query("UPDATE videos SET comments = ?, likes = ?, dislikes = ? WHERE id = ?", [comments, likes, dislikes, id]);
             res.json({ message: "Video erfolgreich aktualisiert." });
         } catch (error) {
             console.error(error);
